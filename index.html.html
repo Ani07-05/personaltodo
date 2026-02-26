@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Workboard — Anirudh</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0F0F0F; --s1: #161616; --s2: #1C1C1C; --s3: #232323;
+    --bd: rgba(255,255,255,0.07); --bd2: rgba(255,255,255,0.13);
+    --txt: #E8E4DC; --mt: #5A5A5A; --mt2: #888;
+    --mono: 'IBM Plex Mono', monospace;
+    --serif: 'Crimson Pro', Georgia, serif;
+  }
+  html, body { background: var(--bg); color: var(--txt); min-height: 100vh; font-family: var(--mono); }
+
+  body {
+    background-image:
+      radial-gradient(ellipse 55% 35% at 15% 5%,  rgba(232,160,48,0.05) 0%, transparent 55%),
+      radial-gradient(ellipse 45% 35% at 85% 85%, rgba(78,201,148,0.05) 0%, transparent 55%);
+  }
+
+  /* HEADER */
+  .hd {
+    padding: 34px 48px 26px;
+    border-bottom: 1px solid var(--bd);
+    display: flex; align-items: flex-end; justify-content: space-between;
+    animation: fd .5s ease both;
+  }
+  .hd-eye { font-size: 10px; letter-spacing: .25em; color: var(--mt); text-transform: uppercase; margin-bottom: 5px; }
+  .hd-ttl { font-family: var(--serif); font-size: 2.5rem; font-weight: 300; letter-spacing: -.02em; line-height: 1; }
+  .hd-ttl em { color: var(--mt); font-style: italic; }
+  .hd-r   { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+  .hd-n   { font-size: 2.1rem; font-weight: 600; line-height: 1; font-family: var(--mono); }
+  .hd-l   { font-size: 10px; letter-spacing: .2em; color: var(--mt); text-transform: uppercase; }
+
+  /* TOPBAR */
+  .bar {
+    padding: 13px 48px; border-bottom: 1px solid var(--bd);
+    display: flex; align-items: center; justify-content: space-between;
+    animation: fd .5s .07s ease both;
+  }
+  .filters { display: flex; }
+  .fb {
+    background: none; border: 1px solid var(--bd); color: var(--mt);
+    font-family: var(--mono); font-size: 11px; letter-spacing: .12em;
+    padding: 6px 16px; cursor: pointer; transition: all .18s; margin-right: -1px;
+  }
+  .fb:first-child { border-radius: 3px 0 0 3px; }
+  .fb:last-child  { border-radius: 0 3px 3px 0; }
+  .fb.on { background: var(--s2); color: var(--txt); border-color: var(--bd2); z-index: 1; position: relative; }
+  .fb:hover:not(.on) { color: var(--txt); background: var(--s1); }
+
+  .add-btn {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--txt); color: var(--bg); border: none; border-radius: 5px;
+    padding: 9px 20px; font-family: var(--mono); font-size: 12px; font-weight: 700;
+    letter-spacing: .08em; cursor: pointer; transition: opacity .15s, transform .12s;
+  }
+  .add-btn:hover  { opacity: .85; }
+  .add-btn:active { transform: scale(.97); }
+
+  /* GRID */
+  .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+
+  .col {
+    padding: 30px; border-right: 1px solid var(--bd); min-height: 65vh;
+    animation: fu .5s ease both;
+  }
+  .col:last-child { border-right: none; }
+  .col:nth-child(1) { animation-delay: .12s; }
+  .col:nth-child(2) { animation-delay: .20s; }
+  .col:nth-child(3) { animation-delay: .28s; }
+
+  .col-hd {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 22px; padding-bottom: 16px; border-bottom: 1px solid var(--bd);
+  }
+  .col-ic { font-size: 18px; margin-bottom: 5px; }
+  .col-nm { font-size: 11px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; }
+  .col-sb { font-size: 10px; color: var(--mt); letter-spacing: .07em; margin-top: 3px; }
+  .col-ct { font-size: 11px; color: var(--mt); background: var(--s2); border: 1px solid var(--bd); border-radius: 3px; padding: 3px 9px; white-space: nowrap; }
+
+  /* TASKS */
+  .tasks { display: flex; flex-direction: column; gap: 7px; }
+
+  .ti {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 11px 13px; background: var(--s1); border-radius: 4px;
+    border: 1px solid var(--bd); transition: border-color .18s, background .18s;
+    position: relative; overflow: hidden;
+  }
+  .ti::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+    background: var(--ac, #888);
+  }
+  .ti:hover { border-color: var(--bd2); background: var(--s2); }
+  .ti.done  { opacity: .38; }
+  .ti.done .tt { text-decoration: line-through; color: var(--mt); }
+
+  .chk {
+    width: 15px; height: 15px; min-width: 15px; border-radius: 3px;
+    border: 1px solid rgba(255,255,255,.16); background: none; cursor: pointer;
+    margin-top: 2px; display: flex; align-items: center; justify-content: center;
+    transition: all .14s; flex-shrink: 0; font-size: 9px; font-weight: 700; color: #111;
+  }
+  .chk:hover { border-color: rgba(255,255,255,.38); }
+
+  .tb  { flex: 1; min-width: 0; }
+  .tt  { font-family: var(--serif); font-size: 14.5px; line-height: 1.4; word-break: break-word; color: var(--txt); }
+  .tm  { display: flex; align-items: center; gap: 7px; margin-top: 5px; flex-wrap: wrap; }
+  .ptag {
+    font-size: 9px; letter-spacing: .1em; font-weight: 600; text-transform: uppercase;
+    padding: 2px 5px; border-radius: 2px; font-family: var(--mono);
+  }
+  .dtag { font-size: 10px; color: var(--mt2); }
+
+  .tdel {
+    background: none; border: none; color: var(--mt); cursor: pointer;
+    font-size: 18px; opacity: 0; transition: opacity .14s, color .14s;
+    padding: 0 3px; line-height: 1; flex-shrink: 0;
+  }
+  .ti:hover .tdel { opacity: 1; }
+  .tdel:hover { color: #FF6B6B; }
+
+  .empty {
+    text-align: center; padding: 36px 0; color: var(--mt);
+    font-family: var(--serif); font-size: 14px; font-style: italic;
+  }
+
+  /* MODAL */
+  .backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,.78);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; padding: 20px;
+    backdrop-filter: blur(4px);
+    animation: bdin .17s ease both;
+  }
+  .backdrop.hidden { display: none; }
+
+  .modal {
+    background: #161616; border: 1px solid rgba(255,255,255,.13);
+    border-radius: 8px; width: 100%; max-width: 490px;
+    padding: 28px; box-shadow: 0 24px 80px rgba(0,0,0,.75);
+    animation: min .2s ease both;
+  }
+
+  .modal-hd {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 22px;
+  }
+  .modal-ttl { font-size: 13px; font-weight: 600; letter-spacing: .15em; text-transform: uppercase; }
+  .modal-x {
+    background: none; border: none; color: var(--mt); cursor: pointer;
+    font-size: 22px; line-height: 1; padding: 2px 7px; border-radius: 3px;
+    transition: color .15s, background .15s;
+  }
+  .modal-x:hover { color: var(--txt); background: var(--s2); }
+
+  .modal-cats { display: flex; gap: 6px; margin-bottom: 22px; }
+  .mcat {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+    background: var(--s2); border: 1px solid var(--bd); border-radius: 5px;
+    padding: 8px 4px; font-family: var(--mono); font-size: 10px; letter-spacing: .07em;
+    color: var(--mt); cursor: pointer; transition: all .15s;
+  }
+  .mcat:hover { color: var(--txt); border-color: var(--bd2); }
+  .mcat.active { font-weight: 600; }
+
+  .mfield { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+  .mlbl   { font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: var(--mt); }
+  .minput {
+    background: var(--s2); border: 1px solid var(--bd); border-radius: 5px;
+    padding: 11px 14px; font-family: var(--serif); font-size: 15px; color: var(--txt);
+    outline: none; transition: border-color .18s; width: 100%;
+  }
+  .minput::placeholder { color: var(--mt); font-style: italic; }
+  .minput:focus { border-color: var(--focus-clr, rgba(255,255,255,.3)); }
+
+  .mrow { display: flex; gap: 16px; margin-bottom: 18px; align-items: flex-start; }
+  .mhalf { flex: 1; }
+
+  .prios { display: flex; gap: 5px; }
+  .pbtn {
+    flex: 1; background: var(--s2); border: 1px solid var(--bd); border-radius: 4px;
+    padding: 7px 4px; font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+    color: var(--mt); cursor: pointer; transition: all .14s; font-weight: 500;
+  }
+  .pbtn:hover { color: var(--txt); border-color: var(--bd2); }
+  .pbtn.active { font-weight: 700; }
+
+  .msub {
+    width: 100%; padding: 13px; border: none; border-radius: 5px;
+    font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: .1em;
+    color: #111; cursor: pointer; transition: opacity .15s, transform .12s; margin-top: 4px;
+  }
+  .msub:hover   { opacity: .85; }
+  .msub:active  { transform: scale(.98); }
+  .msub:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* CALENDAR */
+  .cal-wrap { position: relative; }
+  .cal-btn {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--s2); border: 1px solid var(--bd); border-radius: 4px;
+    padding: 8px 11px; font-family: var(--mono); font-size: 11px;
+    color: var(--mt); cursor: pointer; transition: all .15s; white-space: nowrap;
+  }
+  .cal-btn:hover { border-color: var(--bd2); color: var(--txt); }
+  .cal-btn.has-date { color: var(--txt); }
+  .cal-clr {
+    margin-left: 6px; font-size: 14px; color: var(--mt);
+    transition: color .14s; line-height: 1;
+  }
+  .cal-clr:hover { color: #FF6B6B; }
+
+  .cal-pop {
+    position: absolute; top: calc(100% + 6px); left: 0; z-index: 9999;
+    background: #1B1B1B; border: 1px solid rgba(255,255,255,.14);
+    border-radius: 7px; padding: 14px; width: 224px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.7);
+    animation: calp .15s ease both;
+  }
+  .cal-pop.hidden { display: none; }
+  .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .cal-mo  { font-size: 11px; font-weight: 600; letter-spacing: .08em; }
+  .cal-arr {
+    background: none; border: none; color: var(--mt); cursor: pointer;
+    font-size: 18px; padding: 1px 7px; border-radius: 3px;
+    transition: all .13s; line-height: 1;
+  }
+  .cal-arr:hover { color: var(--txt); background: var(--s2); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .cal-wd   { font-size: 9px; color: var(--mt); text-align: center; padding: 2px 0 6px; }
+  .cal-day  {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; border-radius: 3px; cursor: pointer; color: var(--txt);
+    transition: background .12s;
+  }
+  .cal-day:hover    { background: var(--s3); }
+  .cal-day.today    { box-shadow: inset 0 0 0 1px rgba(255,255,255,.2); font-weight: 600; }
+  .cal-day.selected { font-weight: 700; color: #111; }
+  .cal-day.empty    { cursor: default; }
+  .cal-day.empty:hover { background: none; }
+
+  /* FOOTER */
+  .ft {
+    text-align: center; padding: 28px; font-size: 10px; letter-spacing: .18em;
+    color: rgba(90,90,90,.45); text-transform: uppercase;
+    border-top: 1px solid var(--bd); margin-top: 20px;
+  }
+
+  @media (max-width: 860px) {
+    .grid { grid-template-columns: 1fr; }
+    .hd, .bar { padding-left: 20px; padding-right: 20px; }
+    .col { padding: 22px 18px; }
+    .mrow { flex-direction: column; }
+  }
+
+  @keyframes fd   { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fu   { from { opacity:0; transform:translateY(14px);  } to { opacity:1; transform:translateY(0); } }
+  @keyframes bdin { from { opacity:0; } to { opacity:1; } }
+  @keyframes min  { from { opacity:0; transform:scale(.96) translateY(8px); } to { opacity:1; transform:scale(1) translateY(0); } }
+  @keyframes calp { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:translateY(0); } }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hd">
+  <div>
+    <div class="hd-eye">Anirudh · Task Ops</div>
+    <h1 class="hd-ttl">Work<em>board</em></h1>
+  </div>
+  <div class="hd-r">
+    <span class="hd-n" id="open-count">0</span>
+    <span class="hd-l">open tasks</span>
+  </div>
+</header>
+
+<!-- TOPBAR -->
+<div class="bar">
+  <div class="filters">
+    <button class="fb on" data-filter="ALL">ALL</button>
+    <button class="fb"    data-filter="OPEN">OPEN</button>
+    <button class="fb"    data-filter="DONE">DONE</button>
+  </div>
+  <button class="add-btn" id="open-modal-btn">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+      <path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>
+    Add Task
+  </button>
+</div>
+
+<!-- GRID -->
+<div class="grid" id="grid"></div>
+
+<div class="ft">tasks saved in your browser · click + add task · esc closes modal</div>
+
+<!-- MODAL -->
+<div class="backdrop hidden" id="modal-backdrop">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="modal-ttl">New Task</span>
+      <button class="modal-x" id="close-modal-btn">×</button>
+    </div>
+
+    <!-- Category tabs -->
+    <div class="modal-cats" id="modal-cats"></div>
+
+    <!-- Task input -->
+    <div class="mfield">
+      <label class="mlbl">Task</label>
+      <input class="minput" id="task-input" placeholder="What needs to be done?" autocomplete="off" />
+    </div>
+
+    <!-- Priority + Due -->
+    <div class="mrow">
+      <div class="mfield mhalf">
+        <label class="mlbl">Priority</label>
+        <div class="prios" id="prio-group"></div>
+      </div>
+      <div class="mfield mhalf">
+        <label class="mlbl">Due Date</label>
+        <div class="cal-wrap" id="cal-wrap">
+          <button type="button" class="cal-btn" id="cal-trigger">
+            <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+              <rect x="1" y="2" width="10" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+              <path d="M1 5h10M4 1v2M8 1v2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>
+            <span id="cal-label">Set due date</span>
+            <span class="cal-clr hidden" id="cal-clear">×</span>
+          </button>
+          <div class="cal-pop hidden" id="cal-pop">
+            <div class="cal-nav">
+              <button class="cal-arr" id="cal-prev">‹</button>
+              <span class="cal-mo" id="cal-month-label"></span>
+              <button class="cal-arr" id="cal-next">›</button>
+            </div>
+            <div class="cal-grid" id="cal-grid"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="msub" id="submit-btn" disabled>Add Task</button>
+  </div>
+</div>
+
+<script>
+// ── Data ──────────────────────────────────────────────────────────────────────
+const CATS = {
+  classroom:  { label: 'Classroom',   full: 'Google Classroom',    accent: '#E8A030', icon: '◈' },
+  essays:     { label: 'Essays',      full: 'Writing & Drafts',    accent: '#C47FA4', icon: '◇' },
+  opensource: { label: 'Open Source', full: 'Contributions & PRs', accent: '#4EC994', icon: '◆' },
+};
+const PRIORITIES = ['HIGH', 'MED', 'LOW'];
+const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTHS_FULL  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const WDAYS = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+const STORAGE_KEY = 'workboard-v1';
+
+const prioColor = (p) => p === 'HIGH' ? '#FF6B6B' : p === 'MED' ? '#E8A030' : '#6B8CAE';
+const fmtDue    = (iso) => { if (!iso) return null; const [,m,d] = iso.split('-'); return `${MONTHS_SHORT[+m-1]} ${+d}`; };
+let uidCounter  = Date.now();
+const newId     = () => String(++uidCounter);
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let tasks = { classroom: [], essays: [], opensource: [] };
+let filter = 'ALL';
+let modalCat = 'classroom';
+let modalPrio = 'MED';
+let modalDue = '';
+let calViewYear, calViewMonth;
+
+function loadTasks() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) tasks = JSON.parse(raw);
+  } catch {}
+}
+
+function saveTasks() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); } catch {}
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function renderAll() {
+  updateOpenCount();
+  renderGrid();
+}
+
+function updateOpenCount() {
+  const total = Object.values(tasks).flat().filter(t => !t.done).length;
+  document.getElementById('open-count').textContent = total;
+}
+
+function renderGrid() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  Object.entries(CATS).forEach(([cat, meta]) => {
+    const all  = tasks[cat] || [];
+    const open = all.filter(t => !t.done).length;
+    let rows = all;
+    if (filter === 'DONE') rows = all.filter(t => t.done);
+    if (filter === 'OPEN') rows = all.filter(t => !t.done);
+
+    const col = document.createElement('div');
+    col.className = 'col';
+
+    // Header
+    col.innerHTML = `
+      <div class="col-hd">
+        <div>
+          <div class="col-ic" style="color:${meta.accent}">${meta.icon}</div>
+          <div class="col-nm" style="color:${meta.accent}">${meta.label}</div>
+          <div class="col-sb">${meta.full}</div>
+        </div>
+        <div class="col-ct">${open} open</div>
+      </div>
+      <div class="tasks" id="tasks-${cat}"></div>
+    `;
+    grid.appendChild(col);
+
+    const taskList = col.querySelector(`#tasks-${cat}`);
+
+    if (rows.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.textContent = filter === 'DONE' ? 'nothing done yet' : 'all clear';
+      taskList.appendChild(empty);
+      return;
+    }
+
+    rows.forEach(task => {
+      const el = document.createElement('div');
+      el.className = `ti${task.done ? ' done' : ''}`;
+      el.style.setProperty('--ac', meta.accent);
+
+      const chkStyle = task.done
+        ? `background:${meta.accent};border-color:${meta.accent};`
+        : '';
+      const pc = prioColor(task.priority);
+      const dueHtml = task.due
+        ? `<span class="dtag">due ${fmtDue(task.due)}</span>`
+        : '';
+
+      el.innerHTML = `
+        <button class="chk" data-id="${task.id}" data-cat="${cat}" style="${chkStyle}">${task.done ? '✓' : ''}</button>
+        <div class="tb">
+          <div class="tt">${escHtml(task.text)}</div>
+          <div class="tm">
+            <span class="ptag" style="color:${pc};background:${pc}18;border:1px solid ${pc}30">${task.priority}</span>
+            ${dueHtml}
+          </div>
+        </div>
+        <button class="tdel" data-id="${task.id}" data-cat="${cat}">×</button>
+      `;
+      taskList.appendChild(el);
+    });
+  });
+
+  // Events on tasks
+  document.querySelectorAll('.chk').forEach(btn => {
+    btn.addEventListener('click', () => toggleTask(btn.dataset.cat, btn.dataset.id));
+  });
+  document.querySelectorAll('.tdel').forEach(btn => {
+    btn.addEventListener('click', () => deleteTask(btn.dataset.cat, btn.dataset.id));
+  });
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Task actions ──────────────────────────────────────────────────────────────
+function toggleTask(cat, id) {
+  tasks[cat] = tasks[cat].map(t => t.id === id ? { ...t, done: !t.done } : t);
+  saveTasks(); renderAll();
+}
+
+function deleteTask(cat, id) {
+  tasks[cat] = tasks[cat].filter(t => t.id !== id);
+  saveTasks(); renderAll();
+}
+
+function addTask() {
+  const input = document.getElementById('task-input');
+  const text  = input.value.trim();
+  if (!text) return;
+  tasks[modalCat].push({ id: newId(), text, category: modalCat, done: false, priority: modalPrio, due: modalDue, createdAt: Date.now() });
+  saveTasks(); renderAll();
+  closeModal();
+}
+
+// ── Filter ────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.fb').forEach(btn => {
+  btn.addEventListener('click', () => {
+    filter = btn.dataset.filter;
+    document.querySelectorAll('.fb').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    renderGrid();
+  });
+});
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+function buildModalCats() {
+  const wrap = document.getElementById('modal-cats');
+  wrap.innerHTML = '';
+  Object.entries(CATS).forEach(([key, meta]) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `mcat${modalCat === key ? ' active' : ''}`;
+    btn.dataset.cat = key;
+    if (modalCat === key) {
+      btn.style.borderColor = meta.accent;
+      btn.style.color = meta.accent;
+      btn.style.background = meta.accent + '12';
+    }
+    btn.innerHTML = `<span>${meta.icon}</span>${meta.label}`;
+    btn.addEventListener('click', () => {
+      modalCat = key;
+      document.getElementById('task-input').style.setProperty('--focus-clr', meta.accent);
+      document.getElementById('submit-btn').style.background = meta.accent;
+      document.getElementById('submit-btn').textContent = `Add to ${meta.label}`;
+      document.querySelectorAll('.mcat').forEach(b => {
+        b.classList.remove('active');
+        b.style.borderColor = ''; b.style.color = ''; b.style.background = '';
+      });
+      btn.classList.add('active');
+      btn.style.borderColor = meta.accent;
+      btn.style.color = meta.accent;
+      btn.style.background = meta.accent + '12';
+      updateCalBtnColor();
+    });
+    wrap.appendChild(btn);
+  });
+}
+
+function buildPrioGroup() {
+  const wrap = document.getElementById('prio-group');
+  wrap.innerHTML = '';
+  PRIORITIES.forEach(p => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `pbtn${modalPrio === p ? ' active' : ''}`;
+    btn.textContent = p;
+    if (modalPrio === p) {
+      const pc = prioColor(p);
+      btn.style.borderColor = pc; btn.style.color = pc; btn.style.background = pc + '18';
+    }
+    btn.addEventListener('click', () => {
+      modalPrio = p;
+      document.querySelectorAll('.pbtn').forEach(b => {
+        b.classList.remove('active');
+        b.style.borderColor = ''; b.style.color = ''; b.style.background = '';
+      });
+      btn.classList.add('active');
+      const pc = prioColor(p);
+      btn.style.borderColor = pc; btn.style.color = pc; btn.style.background = pc + '18';
+    });
+    wrap.appendChild(btn);
+  });
+}
+
+function openModal() {
+  modalCat  = 'classroom';
+  modalPrio = 'MED';
+  modalDue  = '';
+  document.getElementById('modal-backdrop').classList.remove('hidden');
+  buildModalCats();
+  buildPrioGroup();
+  resetCalendar();
+  const input = document.getElementById('task-input');
+  input.value = '';
+  input.style.setProperty('--focus-clr', CATS.classroom.accent);
+  const sub = document.getElementById('submit-btn');
+  sub.style.background = CATS.classroom.accent;
+  sub.textContent = 'Add to Classroom';
+  sub.disabled = true;
+  setTimeout(() => input.focus(), 50);
+}
+
+function closeModal() {
+  document.getElementById('modal-backdrop').classList.add('hidden');
+  document.getElementById('cal-pop').classList.add('hidden');
+}
+
+document.getElementById('open-modal-btn').addEventListener('click', openModal);
+document.getElementById('close-modal-btn').addEventListener('click', closeModal);
+document.getElementById('modal-backdrop').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'Enter' && !document.getElementById('modal-backdrop').classList.contains('hidden')) {
+    const inp = document.getElementById('task-input');
+    if (document.activeElement === inp) addTask();
+  }
+});
+document.getElementById('task-input').addEventListener('input', () => {
+  document.getElementById('submit-btn').disabled = !document.getElementById('task-input').value.trim();
+});
+document.getElementById('submit-btn').addEventListener('click', addTask);
+
+// ── Calendar ──────────────────────────────────────────────────────────────────
+function resetCalendar() {
+  const now = new Date();
+  calViewYear  = now.getFullYear();
+  calViewMonth = now.getMonth();
+  modalDue = '';
+  renderCal();
+  updateCalBtn();
+}
+
+function renderCal() {
+  const label = document.getElementById('cal-month-label');
+  label.textContent = `${MONTHS_FULL[calViewMonth]} ${calViewYear}`;
+
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = '';
+
+  // Day headers
+  WDAYS.forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'cal-wd'; el.textContent = d;
+    grid.appendChild(el);
+  });
+
+  const firstDow  = new Date(calViewYear, calViewMonth, 1).getDay();
+  const daysInMo  = new Date(calViewYear, calViewMonth + 1, 0).getDate();
+  const todayStr  = new Date().toISOString().slice(0, 10);
+
+  // Empty cells
+  for (let i = 0; i < firstDow; i++) {
+    const el = document.createElement('div');
+    el.className = 'cal-day empty'; grid.appendChild(el);
+  }
+
+  for (let d = 1; d <= daysInMo; d++) {
+    const iso = `${calViewYear}-${String(calViewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const el  = document.createElement('div');
+    el.className = 'cal-day';
+    if (iso === todayStr) el.classList.add('today');
+    if (iso === modalDue) {
+      el.classList.add('selected');
+      el.style.background = CATS[modalCat].accent;
+    }
+    el.textContent = d;
+    el.addEventListener('click', () => {
+      modalDue = iso;
+      document.getElementById('cal-pop').classList.add('hidden');
+      updateCalBtn();
+      renderCal();
+    });
+    grid.appendChild(el);
+  }
+}
+
+function updateCalBtn() {
+  const btn   = document.getElementById('cal-trigger');
+  const lbl   = document.getElementById('cal-label');
+  const clr   = document.getElementById('cal-clear');
+  const accent = CATS[modalCat].accent;
+
+  if (modalDue) {
+    lbl.textContent = fmtDue(modalDue);
+    btn.classList.add('has-date');
+    btn.style.borderColor = accent + '55';
+    btn.style.color = accent;
+    clr.classList.remove('hidden');
+  } else {
+    lbl.textContent = 'Set due date';
+    btn.classList.remove('has-date');
+    btn.style.borderColor = ''; btn.style.color = '';
+    clr.classList.add('hidden');
+  }
+}
+
+function updateCalBtnColor() {
+  if (modalDue) {
+    const accent = CATS[modalCat].accent;
+    document.getElementById('cal-trigger').style.borderColor = accent + '55';
+    document.getElementById('cal-trigger').style.color = accent;
+  }
+  renderCal(); // refresh selected cell color
+}
+
+document.getElementById('cal-trigger').addEventListener('click', (e) => {
+  const pop = document.getElementById('cal-pop');
+  pop.classList.toggle('hidden');
+});
+
+document.getElementById('cal-clear').addEventListener('click', (e) => {
+  e.stopPropagation();
+  modalDue = '';
+  updateCalBtn();
+  renderCal();
+});
+
+document.getElementById('cal-prev').addEventListener('click', () => {
+  calViewMonth--;
+  if (calViewMonth < 0) { calViewMonth = 11; calViewYear--; }
+  renderCal();
+});
+
+document.getElementById('cal-next').addEventListener('click', () => {
+  calViewMonth++;
+  if (calViewMonth > 11) { calViewMonth = 0; calViewYear++; }
+  renderCal();
+});
+
+// Close calendar on outside click
+document.addEventListener('mousedown', (e) => {
+  const wrap = document.getElementById('cal-wrap');
+  const pop  = document.getElementById('cal-pop');
+  if (!pop.classList.contains('hidden') && !wrap.contains(e.target)) {
+    pop.classList.add('hidden');
+  }
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadTasks();
+renderAll();
+</script>
+</body>
+</html>
